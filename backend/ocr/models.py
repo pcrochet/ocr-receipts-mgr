@@ -3,17 +3,18 @@ from django.utils import timezone
 import uuid
 from django.contrib.postgres.fields import ArrayField
 
+
 class Brand(models.Model):
-    id = models.UUIDField(primary_key=True, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # <-- génère l’UUID côté Django
     name = models.CharField(max_length=255, unique=True)
     aliases = ArrayField(models.TextField(), blank=True, default=list)
-    meta = models.JSONField(default=dict)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    meta = models.JSONField(default=dict, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)   # <-- remplit à l’INSERT
+    updated_at = models.DateTimeField(auto_now=True)       # <-- remplit à chaque save()
 
     class Meta:
         managed = False
-        db_table = "brands"  # search_path=ocr,public dans settings
+        db_table = "brands"   # search_path=ocr,public défini en settings
 
 class BrandAlias(models.Model):
     id = models.BigAutoField(primary_key=True)
