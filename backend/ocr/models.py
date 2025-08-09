@@ -12,7 +12,7 @@ class Brand(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'ocr.brands'
+        db_table = "brands"
         verbose_name = "Brand"
         verbose_name_plural = "Brands"
 
@@ -25,7 +25,7 @@ class BrandAlias(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ocr.brand_aliases"
+        db_table = "brand_aliases"
 
 class Receipt(models.Model):
     id = models.UUIDField(primary_key=True, editable=False)
@@ -45,7 +45,7 @@ class Receipt(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ocr.receipts"
+        db_table = "receipts"
 
 class ReceiptLine(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -64,7 +64,7 @@ class ReceiptLine(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ocr.receipt_lines"
+        db_table = "receipt_lines"
         unique_together = (("receipt", "line_number"),)
 
 class ProcessingEvent(models.Model):
@@ -80,4 +80,4 @@ class ProcessingEvent(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ocr.processing_events"
+        db_table = "processing_events"

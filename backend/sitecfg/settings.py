@@ -81,6 +81,9 @@ DATABASES = {
         "NAME": os.getenv("POSTGRES_DB", "app"),
         "USER": os.getenv("POSTGRES_USER", "app"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "app"),
+        "OPTIONS": {
+            "options": "-c search_path=ocr,public"
+        },
     }
 }
 
