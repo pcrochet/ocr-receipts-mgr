@@ -1,0 +1,44 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${PGPORT:-5432}:5432"
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.max=10000"
+      - "-c"
+      - "pg_stat_statements.track=all"
+      - "-c"
+      - "track_io_timing=on"
+      - "-c"
+      - "log_min_duration_statement=200ms"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # Charge automatiquement le schéma au premier démarrage (si volume neuf)
+      - ../docs/schema.sql:/docker-entrypoint-initdb.d/10_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: pg-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres_exporter:postgres_exporter@db:5432/postgres?sslmode=disable
+    depends_on:
+      - db
+    ports:
+      - "9187:9187"
+
+volumes:
+  db_data:

@@ -1,1 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
 venv*/
+# Env
+.env
+.env.*.local
+# Data (fichiers volumineux/non sensibles au versioning)
+data/inbox/
+data/processed/
+data/logs/
+# Django
+*.sqlite3
+# VSCode
+.vscode/
