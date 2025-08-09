@@ -1,20 +1,19 @@
 from django.db import models
 from django.utils import timezone
 import uuid
+from django.contrib.postgres.fields import ArrayField
 
 class Brand(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, editable=False)
     name = models.CharField(max_length=255, unique=True)
-    aliases = models.JSONField(default=list)  # stocké sous forme de TEXT[] → on lira/écrira via SQL Brut si besoin, sinon laisser en lecture seule
+    aliases = ArrayField(models.TextField(), blank=True, default=list)
     meta = models.JSONField(default=dict)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = "brands"
-        verbose_name = "Brand"
-        verbose_name_plural = "Brands"
+        db_table = "brands"  # search_path=ocr,public dans settings
 
 class BrandAlias(models.Model):
     id = models.BigAutoField(primary_key=True)

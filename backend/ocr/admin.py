@@ -37,6 +37,14 @@ class ReceiptAdmin(admin.ModelAdmin):
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "aliases_preview")
     search_fields = ("name",)
     readonly_fields = ("id", "created_at", "updated_at")
+
+    def aliases_preview(self, obj):
+        try:
+            return ", ".join(obj.aliases or [])
+        except Exception:
+            return ""
+    aliases_preview.short_description = "Aliases"
+
