@@ -28,12 +28,12 @@ class ReceiptAdmin(admin.ModelAdmin):
     actions = [mark_brand_validated, reset_brand]
     readonly_fields = ("created_at", "updated_at")
 
+    @admin.display(description="Brand")
     def brand_name(self, obj):
         try:
             return (obj.brand or {}).get("name")
         except Exception:
             return None
-    brand_name.short_description = "Brand"
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
@@ -41,10 +41,9 @@ class BrandAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     readonly_fields = ("id", "created_at", "updated_at")
 
+    @admin.display(description="Aliases")
     def aliases_preview(self, obj):
         try:
             return ", ".join(obj.aliases or [])
         except Exception:
             return ""
-    aliases_preview.short_description = "Aliases"
-

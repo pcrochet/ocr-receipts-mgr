@@ -5,12 +5,12 @@ from django.contrib.postgres.fields import ArrayField
 
 
 class Brand(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # <-- génère l’UUID côté Django
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)   # (tu l’avais déjà)
     name = models.CharField(max_length=255, unique=True)
     aliases = ArrayField(models.TextField(), blank=True, default=list)
     meta = models.JSONField(default=dict, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)   # <-- remplit à l’INSERT
-    updated_at = models.DateTimeField(auto_now=True)       # <-- remplit à chaque save()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         managed = False
@@ -20,28 +20,26 @@ class BrandAlias(models.Model):
     id = models.BigAutoField(primary_key=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, db_column="brand_id")
     alias = models.CharField(max_length=255)
-    # embedding ignoré en admin
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)  # éviter NOT NULL sans valeur
 
     class Meta:
         managed = False
         db_table = "brand_aliases"
 
 class Receipt(models.Model):
-    id = models.UUIDField(primary_key=True, editable=False)
-    uuid_root = models.UUIDField()
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)   # <-- add default
+    uuid_root = models.UUIDField(default=uuid.uuid4, editable=False)              # <-- add default
     source_file = models.TextField()
     sha256 = models.TextField(unique=True)
-    raw_text = models.TextField()
-    # embedding ignoré en admin
-    brand = models.JSONField(null=True, blank=True)  # {"brand_id":..., "name":..., "score":..., "alias":...}
-    state = models.CharField(max_length=32)
+    raw_text = models.TextField(null=True, blank=True)  # <-- doit être nullable (ALTER fait)
+    brand = models.JSONField(null=True, blank=True)
+    state = models.CharField(max_length=32, db_index=True)
     t_ingest_ms = models.IntegerField(null=True, blank=True)
     t_embed_ms = models.IntegerField(null=True, blank=True)
     t_brand_ms = models.IntegerField(null=True, blank=True)
     t_parse_ms = models.IntegerField(null=True, blank=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)   # <-- pour insert via ORM
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         managed = False
@@ -81,3 +79,4 @@ class ProcessingEvent(models.Model):
     class Meta:
         managed = False
         db_table = "processing_events"
+
