@@ -1,3 +1,8 @@
 from django.contrib import admin
 from django.urls import path
-urlpatterns = [ path("admin/", admin.site.urls) ]
+from ocr.admin_views import ocr_tools  # ← notre vue outils
+
+urlpatterns = [
+    path("admin/ocr-tools/", admin.site.admin_view(ocr_tools), name="ocr_tools"),
+    path("admin/", admin.site.urls),
+]

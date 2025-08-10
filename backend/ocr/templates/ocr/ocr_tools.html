@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>Outils OCR</h1>
+
+  <div class="module">
+    <h2>Collecte (.txt → receipts state=collected)</h2>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="collect" />
+      {{ collect_form.as_p }}
+      <button type="submit" class="default">Lancer collect_from_dir</button>
+    </form>
+  </div>
+
+  <div class="module">
+    <h2>Ingestion OCR (collected → ocr_done)</h2>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="ingest" />
+      {{ ingest_form.as_p }}
+      <button type="submit" class="default">Lancer ingest_ocr</button>
+    </form>
+  </div>
+{% endblock %}

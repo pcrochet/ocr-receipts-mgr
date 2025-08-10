@@ -1,3 +1,5 @@
+# backend/ocr/admin.py
+
 from django.contrib import admin
 from .models import Receipt, ReceiptLine, Brand
 
