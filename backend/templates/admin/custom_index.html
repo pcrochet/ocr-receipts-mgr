@@ -1,8 +1,9 @@
 {% extends "admin/index.html" %}
+
 {% block content %}
   {{ block.super }}
   <div class="module">
     <h2>Outils OCR</h2>
-    <p><a class="button" href="{% url 'admin:ocr_tools' %}">Ouvrir les outils OCR</a></p>
+    <p><a class="button" href="{% url 'ocr_tools' %}">Ouvrir les outils OCR</a></p>
   </div>
 {% endblock %}

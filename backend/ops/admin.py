@@ -7,3 +7,6 @@ class JobRunAdmin(admin.ModelAdmin):
     list_filter = ("job", "status", "initiated_by")
     search_fields = ("id", "job")
     readonly_fields = ("job", "initiated_by", "params", "status", "started_at", "finished_at", "metrics")
+
+# On indique à l’admin d’utiliser notre template d’accueil personnalisé
+admin.site.index_template = "admin/custom_index.html"
