@@ -125,3 +125,14 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Emplacement racine des fichiers de l’application (modifiable)
+RECEIPTS_STORE_DIR = BASE_DIR / "var" 
+
+# Noms des sous-dossiers (modifiable)
+RECEIPTS_SUBDIRS = {
+    "raw": "receipts_raw",
+    "json": "receipts_json",
+    "logs": "logs",
+    "exports": "exports",
+}

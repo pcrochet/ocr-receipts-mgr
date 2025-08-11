@@ -1,73 +1,60 @@
 # backend/ocr/admin_views.py
+from pathlib import Path
+from django.conf import settings
+from django.shortcuts import render
+from django.utils import timezone
+from ocr.services.collect_from_dir import collect_from_dir
 
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import messages
-from django.core.management import call_command
-from django.shortcuts import redirect, render
-from django import forms
+def _get_store_paths():
+    base = Path(getattr(settings, "RECEIPTS_STORE_DIR", settings.BASE_DIR / "var")).resolve()
+    sub = getattr(settings, "RECEIPTS_SUBDIRS", {"raw":"receipts_raw","json":"receipts_json","logs":"logs","exports":"exports"})
+    paths = {
+        "base": base,
+        "raw": base / sub.get("raw", "receipts_raw"),
+        "json": base / sub.get("json", "receipts_json"),
+        "logs": base / sub.get("logs", "logs"),
+        "exports": base / sub.get("exports", "exports"),
+    }
+    for d in paths.values():
+        d.mkdir(parents=True, exist_ok=True)
+    return paths
 
-class CollectForm(forms.Form):
-    base_dir = forms.CharField(label="Base dir", required=True)
-    pattern = forms.CharField(label="Pattern", required=False, initial="*.txt")
-    recursive = forms.BooleanField(label="Récursif", required=False, initial=False)
-    absolute = forms.BooleanField(label="Stocker nom seul (pas relatif)", required=False, initial=False)
-    dry_run = forms.BooleanField(label="Dry run", required=False, initial=False)
-
-class IngestForm(forms.Form):
-    base_dir = forms.CharField(label="Base dir", required=True)
-    since = forms.CharField(label="Since (YYYY-MM-DD)", required=False)
-    ids = forms.CharField(label="IDs (UUIDs séparés par espace)", required=False)
-    dry_run = forms.BooleanField(label="Dry run", required=False, initial=False)
-
-@staff_member_required
 def ocr_tools(request):
+    log_text = ""
+    log_file_path = None
+    banner = None
+
     if request.method == "POST":
-        action = request.POST.get("action")
-        try:
-            if action == "collect":
-                form = CollectForm(request.POST)
-                if form.is_valid():
-                    cd = form.cleaned_data
-                    call_command(
-                        "collect_from_dir",
-                        **{
-                            "base-dir": cd["base_dir"],
-                            "pattern": cd["pattern"] or "*.txt",
-                            "recursive": cd["recursive"],
-                            "absolute": cd["absolute"],
-                            "dry-run": cd["dry_run"],
-                        },
-                    )
-                    messages.success(request, "Commande collect_from_dir exécutée.")
-                else:
-                    messages.error(request, f"Form collect invalide: {form.errors}")
+        base_dir = request.POST.get("base_dir") or str(settings.BASE_DIR / "import")
+        recursive = "recursive" in request.POST
+        dry_run = "dry_run" in request.POST
 
-            elif action == "ingest":
-                form = IngestForm(request.POST)
-                if form.is_valid():
-                    cd = form.cleaned_data
-                    ids = (cd["ids"] or "").strip()
-                    call_command(
-                        "ingest_ocr",
-                        **{
-                            "base-dir": cd["base_dir"],
-                            "since": cd["since"] or None,
-                            "ids": ids.split() if ids else None,
-                            "dry-run": cd["dry_run"],
-                        },
-                    )
-                    messages.success(request, "Commande ingest_ocr exécutée.")
-                else:
-                    messages.error(request, f"Form ingest invalide: {form.errors}")
+        store = _get_store_paths()
+        log_file_path = store["logs"] / f"collect_from_dir-{timezone.localdate().isoformat()}.log"
 
-        except Exception as e:
-            messages.error(request, f"Échec: {e}")
+        lines = []
+        def ui_log(msg: str):
+            ts = timezone.now().strftime("%Y-%m-%d %H:%M:%S")
+            line = f"[{ts}] {msg}"
+            lines.append(line)
+            with log_file_path.open("a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
 
-        from django.urls import reverse
-        return redirect(reverse("admin:ocr_tools"))
+        metrics = collect_from_dir(
+            base_dir=base_dir,
+            pattern="*.txt",
+            recursive=recursive,
+            store_relative=True,
+            dry_run=dry_run,
+            log=ui_log,
+        )
+        ui_log(f"==> Done: {metrics}")
 
-    return render(
-        request,
-        "ocr/ocr_tools.html",
-        {"collect_form": CollectForm(), "ingest_form": IngestForm()},
-    )
+        log_text = "\n".join(lines)
+        banner = f"Collecte terminée. Log: {log_file_path}"
+
+    return render(request, "ocr/ocr_tools.html", {
+        "log_text": log_text,
+        "log_file_path": log_file_path,
+        "banner": banner,  # <= affiché juste sous le bouton
+    })

@@ -14,3 +14,4 @@ data/logs/
 *.sqlite3
 # VSCode
 .vscode/
+backend/var/
