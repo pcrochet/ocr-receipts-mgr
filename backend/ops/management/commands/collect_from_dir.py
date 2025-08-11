@@ -1,4 +1,5 @@
 # ops/management/commands/collect_from_dir.py
+
 from django.core.management.base import BaseCommand
 from ocr.services.collect_from_dir import collect_from_dir
 

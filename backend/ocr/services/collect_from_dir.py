@@ -1,3 +1,5 @@
+# backend/ocr/services/collect_from_dir.py
+
 from __future__ import annotations
 import hashlib, os, time
 from pathlib import Path

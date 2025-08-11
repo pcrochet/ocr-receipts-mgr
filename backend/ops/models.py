@@ -1,5 +1,6 @@
-from django.db import models
+# backend/ops/models.py
 
+from django.db import models
 
 class JobRun(models.Model):
     STATUS_CHOICES = [

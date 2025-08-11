@@ -1,3 +1,5 @@
+# backend/ocr/constants.py
+
 from enum import StrEnum  # Python 3.11+
 
 class ReceiptState(StrEnum):
