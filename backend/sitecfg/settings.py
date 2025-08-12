@@ -118,8 +118,7 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "app"),
         "CONN_MAX_AGE": int(os.getenv("PG_CONN_MAX_AGE", "60")),  # keepalive
         "OPTIONS": {
-            # Schéma prioritaire "ocr" + public (si tu utilises des schémas)
-            "options": "-c search_path=ocr,public",
+            "options": "-c search_path=pobs,public",
         },
     }
 }
