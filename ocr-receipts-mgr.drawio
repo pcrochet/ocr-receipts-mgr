@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.0.6 Chrome/138.0.7204.100 Electron/37.2.3 Safari/537.36" version="28.0.6">
   <diagram name="Page-1" id="8cAgOMzsa88dXhZdrE5C">
-    <mxGraphModel dx="1097" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1489" dy="1031" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -41,7 +41,12 @@
           <mxGeometry x="110" y="1170" width="320" height="180" as="geometry" />
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="dkjHgfxtDHa3xEaJLgyd-44" target="dkjHgfxtDHa3xEaJLgyd-47" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="667" y="960" />
+              <mxPoint x="395" y="960" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="dkjHgfxtDHa3xEaJLgyd-44" target="dkjHgfxtDHa3xEaJLgyd-50" edge="1">
           <mxGeometry relative="1" as="geometry">
@@ -49,12 +54,17 @@
             <mxPoint x="1470" y="1155" as="targetPoint" />
             <Array as="points">
               <mxPoint x="667" y="960" />
-              <mxPoint x="1470" y="960" />
+              <mxPoint x="1860" y="960" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="dkjHgfxtDHa3xEaJLgyd-44" target="dkjHgfxtDHa3xEaJLgyd-54" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="667" y="960" />
+              <mxPoint x="740" y="960" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-44" value="&lt;span style=&quot;text-align: center;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span style=&quot;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;Étape 1 -&amp;nbsp;&lt;/span&gt;Health check du projet (automatisé)&lt;br&gt;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;text-align: center;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;Étape 2 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;Settings durcis&lt;br&gt;&lt;span data-end=&quot;1105&quot; data-start=&quot;1069&quot;&gt;&lt;span data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;&lt;span data-end=&quot;1105&quot; data-start=&quot;1069&quot;&gt;Étape 3 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;Modélisation canonique&lt;br&gt;&lt;span data-end=&quot;1663&quot; data-start=&quot;1617&quot;&gt;&lt;span data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;&lt;span data-end=&quot;1105&quot; data-start=&quot;1069&quot;&gt;&lt;span data-end=&quot;1663&quot; data-start=&quot;1617&quot;&gt;Étape 4 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;Exécution &amp;amp; traçabilité des jobs&amp;nbsp;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;&lt;span data-end=&quot;1105&quot; data-start=&quot;1069&quot;&gt;&lt;span data-end=&quot;1663&quot; data-start=&quot;1617&quot;&gt;&lt;span data-end=&quot;2118&quot; data-start=&quot;2093&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;Étape 5 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;Admin durci&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;&lt;span data-end=&quot;1105&quot; data-start=&quot;1069&quot;&gt;&lt;span data-end=&quot;1663&quot; data-start=&quot;1617&quot;&gt;&lt;span data-end=&quot;2118&quot; data-start=&quot;2093&quot;&gt;&lt;span data-end=&quot;2527&quot; data-start=&quot;2503&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;Étape 6 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;Tests &amp;amp; QA&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); text-align: center;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); text-align: center;&quot;&gt;Plus tard:&amp;nbsp;PGVector + Celery + permissions/roles + exports avancés.&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;fontStyle=0" parent="1" vertex="1">
           <mxGeometry x="507" y="740" width="320" height="170" as="geometry" />
@@ -69,10 +79,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-50" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;text-align: center;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;Étape 5 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;Admin durci&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1410" y="1010" width="120" height="60" as="geometry" />
+          <mxGeometry x="1800" y="1010" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-52" value="&lt;div&gt;ajouter un “Dashboard OCR” dans l’admin&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;1) Vue admin dédiée&lt;/div&gt;&lt;div&gt;2) URL vers la vue&lt;/div&gt;&lt;div&gt;3) Lien visible sur la home de l’admin&lt;/div&gt;&lt;div&gt;4) Template du dashboard&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
-          <mxGeometry x="1320" y="1160" width="310" height="130" as="geometry" />
+          <mxGeometry x="1710" y="1160" width="310" height="130" as="geometry" />
         </mxCell>
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="dkjHgfxtDHa3xEaJLgyd-54" target="dkjHgfxtDHa3xEaJLgyd-56" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -99,20 +109,26 @@
           <mxGeometry x="598.5" y="1660" width="310" height="100" as="geometry" />
         </mxCell>
         <mxCell id="qobuwuR_mwM1VG5iIdwQ-5" value="&lt;div&gt;on passe en architecture “services + admin mince” avec :&lt;/div&gt;&lt;div&gt;ocr/services/ : audit, storage (I/O disque), receipts (orchestration métier)&lt;/div&gt;&lt;div&gt;ocr/admin/ : receipts.py, brands.py, actions.py, __init__.py&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;u&gt;Mise à jour du code&lt;/u&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;&lt;span style=&quot;text-align: center;&quot;&gt;* Création de&amp;nbsp;&lt;br&gt;-&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;backend/ocr/admin/actions.py&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- backend/ocr/admin/brands.py&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- backend/ocr/admin/receipts.py&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- backend/ocr/services/audit.py&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- backend/ocr/services/receipts.py&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- backend/ocr/services/storage.py&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;text-align: center;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;br style=&quot;text-align: center;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
-          <mxGeometry x="600" y="1820" width="420" height="210" as="geometry" />
+          <mxGeometry x="543.5" y="1830" width="420" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="qobuwuR_mwM1VG5iIdwQ-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="qobuwuR_mwM1VG5iIdwQ-7" target="qobuwuR_mwM1VG5iIdwQ-9">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="qobuwuR_mwM1VG5iIdwQ-7" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;text-align: center;&quot; data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;276&quot; data-start=&quot;227&quot;&gt;&lt;span data-end=&quot;721&quot; data-start=&quot;692&quot;&gt;&lt;span data-end=&quot;1105&quot; data-start=&quot;1069&quot;&gt;&lt;span data-end=&quot;1663&quot; data-start=&quot;1617&quot;&gt;Étape 4 -&amp;nbsp;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;Exécution &amp;amp; traçabilité des jobs&amp;nbsp;&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="1020" width="240" height="60" as="geometry" />
+          <mxGeometry x="1210" y="1020" width="240" height="60" as="geometry" />
         </mxCell>
         <mxCell id="qobuwuR_mwM1VG5iIdwQ-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="dkjHgfxtDHa3xEaJLgyd-44" target="qobuwuR_mwM1VG5iIdwQ-7">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="840" y="990" as="sourcePoint" />
             <mxPoint x="913" y="1100" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="667" y="970" />
-              <mxPoint x="1128" y="970" />
+              <mxPoint x="667" y="960" />
+              <mxPoint x="1320" y="960" />
             </Array>
           </mxGeometry>
+        </mxCell>
+        <mxCell id="qobuwuR_mwM1VG5iIdwQ-9" value="But : avoir un modèle JobRun, un contexte d’exécution pour toutes les commandes, logs par job et métriques." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1150" width="260" height="80" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
