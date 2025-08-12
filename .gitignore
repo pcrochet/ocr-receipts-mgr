@@ -15,3 +15,5 @@ data/logs/
 # VSCode
 .vscode/
 backend/var/
+*.bkp
+ocr-receipts-mgr-*.drawio

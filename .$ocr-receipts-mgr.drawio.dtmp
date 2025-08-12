@@ -22,6 +22,9 @@
         <mxCell id="dkjHgfxtDHa3xEaJLgyd-4" value="chatGPT 5&lt;div&gt;12/08/2025&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="425" y="60" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="dkjHgfxtDHa3xEaJLgyd-5" value="" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
