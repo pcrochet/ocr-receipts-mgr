@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.shortcuts import redirect, render  # ⬅️ import render
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+import os
+from django.conf import settings
 
 from .models import Receipt
 from .services.ingest import ingest_from_dir
@@ -12,16 +14,26 @@ from ops.services.jobrun import job_context
 
 
 def receipts_management(request):
-    # Dashboard simple: compte par état
+    # Compter fichiers incoming (non récursif)
+    incoming_dir = os.path.join(settings.BASE_DIR, "var", "incoming")
+    incoming_count = sum(1 for f in os.listdir(incoming_dir)
+                         if os.path.isfile(os.path.join(incoming_dir, f)))
+
+    # Dashboard : exclure 'collected'
     data = []
     for key, label in Receipt.State.choices:
+        if key == "collected":
+            continue
         data.append({
             "key": key,
             "label": label,
             "count": Receipt.objects.filter(state=key).count(),
         })
-    # ⬅️ RENDRE le template (ne pas se rediriger soi-même)
-    return render(request, "ocr/receipts_management.html", {"data": data})
+
+    return render(request, "ocr/receipts_management.html", {
+        "data": data,
+        "incoming_count": incoming_count
+    })
 
 
 def run_ingest_from_dir(request):

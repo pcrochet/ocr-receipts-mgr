@@ -1,18 +1,19 @@
-# backend/ocr/services/ingest.py
-
 from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Dict, Optional
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from ..models import Receipt
 from . import storage
-from .receipts import finalize_collected_move
+from .receipts import finalize_ingested_move  # ✅ nouveau nom (avec alias rétrocompat côté receipts.py)
 
 SUPPORTED_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".pdf"}
+
 
 def ingest_from_dir(
     subdir: str = "incoming",
@@ -22,7 +23,7 @@ def ingest_from_dir(
     logger: Optional[logging.Logger] = None,
 ) -> Dict[str, int]:
     """
-    Scanne VAR_DIR/<subdir>, crée des Receipt en state 'collected',
+    Scanne VAR_DIR/<subdir>, crée des Receipt en state 'ingested',
     déplace les fichiers vers receipts_raw/YYYY-MM-DD/..., renvoie des métriques.
     """
     log = logger or logging.getLogger("ops.ingest_from_dir")
@@ -32,11 +33,10 @@ def ingest_from_dir(
     if not base.exists() or not base.is_dir():
         raise ValidationError(f"Sous-dossier introuvable: {base}")
 
-    files = (
-        [p for p in base.rglob("*") if p.is_file() and p.suffix.lower() in SUPPORTED_EXT]
-        if recursive else
-        [p for p in base.iterdir() if p.is_file() and p.suffix.lower() in SUPPORTED_EXT]
-    )
+    if recursive:
+        files = [p for p in base.rglob("*") if p.is_file() and p.suffix.lower() in SUPPORTED_EXT]
+    else:
+        files = [p for p in base.iterdir() if p.is_file() and p.suffix.lower() in SUPPORTED_EXT]
 
     created = 0
     duplicates = 0
@@ -64,15 +64,15 @@ def ingest_from_dir(
             log.info("[dry-run] would create receipt: %s", rel_posix)
             continue
 
-        # Crée le receipt minimal
+        # ✅ Crée le receipt en état 'ingested'
         r = Receipt.objects.create(
-            state=Receipt.State.COLLECTED,
+            state=Receipt.State.INGESTED,
             content_hash=content_hash,
             source_path=rel_parent,
             original_filename=filename,
         )
 
-        # Complète size/mime si possible
+        # Complète size/mime si possible (best effort)
         try:
             size, mime = storage.stat_file(abs_path)
             r.size_bytes = size
@@ -82,8 +82,8 @@ def ingest_from_dir(
         except Exception:
             pass
 
-        # Déplacement vers receipts_raw/DATE + MAJ source_path
-        finalize_collected_move(r.pk, move_date=timezone.now().date())
+        # ✅ Déplacement vers receipts_raw/DATE + MAJ source_path
+        finalize_ingested_move(r.pk, move_date=timezone.now().date())
         created += 1
 
         if created % 50 == 0:

@@ -1,3 +1,5 @@
+# backend/ocr/models.py
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -46,14 +48,13 @@ class Receipt(models.Model):
     Les chemins sont RELATIFS à VAR_DIR (ex: incoming/2025-08-12/IMG_1234.jpg).
     """
     class State(models.TextChoices):
-        COLLECTED = "collected", "Collected"
         INGESTED = "ingested", "Ingested"
         OCR_DONE = "ocr_done", "OCR done"
         VECTORIZED = "vectorized", "Vectorized"
         BRAND_STORE_IDENTIFIED = "brand_store_identified", "Brand/Store identified"
 
     # État
-    state = models.CharField(max_length=32, choices=State.choices, default=State.COLLECTED, db_index=True)
+    state = models.CharField(max_length=32, choices=State.choices, default=State.INGESTED, db_index=True)
 
     # Déduplication
     content_hash = models.CharField(max_length=64, unique=True, help_text="SHA-256 du binaire source.")
