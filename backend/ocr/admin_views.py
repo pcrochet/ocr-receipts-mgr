@@ -1,60 +1,51 @@
 # backend/ocr/admin_views.py
-from pathlib import Path
-from django.conf import settings
-from django.shortcuts import render
-from django.utils import timezone
-from ocr.services.collect_from_dir import collect_from_dir
 
-def _get_store_paths():
-    base = Path(getattr(settings, "RECEIPTS_STORE_DIR", settings.BASE_DIR / "var")).resolve()
-    sub = getattr(settings, "RECEIPTS_SUBDIRS", {"raw":"receipts_raw","json":"receipts_json","logs":"logs","exports":"exports"})
-    paths = {
-        "base": base,
-        "raw": base / sub.get("raw", "receipts_raw"),
-        "json": base / sub.get("json", "receipts_json"),
-        "logs": base / sub.get("logs", "logs"),
-        "exports": base / sub.get("exports", "exports"),
-    }
-    for d in paths.values():
-        d.mkdir(parents=True, exist_ok=True)
-    return paths
+from __future__ import annotations
+from django.contrib import messages
+from django.shortcuts import redirect, render  # ⬅️ import render
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 
-def ocr_tools(request):
-    log_text = ""
-    log_file_path = None
-    banner = None
+from .models import Receipt
+from .services.ingest import ingest_from_dir
+from ops.services.jobrun import job_context
 
-    if request.method == "POST":
-        base_dir = request.POST.get("base_dir") or str(settings.BASE_DIR / "import")
-        recursive = "recursive" in request.POST
-        dry_run = "dry_run" in request.POST
 
-        store = _get_store_paths()
-        log_file_path = store["logs"] / f"collect_from_dir-{timezone.localdate().isoformat()}.log"
+def receipts_management(request):
+    # Dashboard simple: compte par état
+    data = []
+    for key, label in Receipt.State.choices:
+        data.append({
+            "key": key,
+            "label": label,
+            "count": Receipt.objects.filter(state=key).count(),
+        })
+    # ⬅️ RENDRE le template (ne pas se rediriger soi-même)
+    return render(request, "ocr/receipts_management.html", {"data": data})
 
-        lines = []
-        def ui_log(msg: str):
-            ts = timezone.now().strftime("%Y-%m-%d %H:%M:%S")
-            line = f"[{ts}] {msg}"
-            lines.append(line)
-            with log_file_path.open("a", encoding="utf-8") as fh:
-                fh.write(line + "\n")
 
-        metrics = collect_from_dir(
-            base_dir=base_dir,
-            pattern="*.txt",
-            recursive=recursive,
-            store_relative=True,
-            dry_run=dry_run,
-            log=ui_log,
-        )
-        ui_log(f"==> Done: {metrics}")
+def run_ingest_from_dir(request):
+    if request.method != "POST":
+        return redirect("receipts_management")
 
-        log_text = "\n".join(lines)
-        banner = f"Collecte terminée. Log: {log_file_path}"
+    subdir = (request.POST.get("subdir") or "incoming").strip()
+    dry = bool(request.POST.get("dry_run"))          # "on" -> True, absent -> False
+    recursive = bool(request.POST.get("recursive"))  # "on" -> True, absent -> False
 
-    return render(request, "ocr/ocr_tools.html", {
-        "log_text": log_text,
-        "log_file_path": log_file_path,
-        "banner": banner,  # <= affiché juste sous le bouton
-    })
+    with job_context(
+        "ingest_from_dir",
+        params={"subdir": subdir, "dry_run": dry, "recursive": recursive},
+        triggered_by="admin",
+    ) as jc:
+        metrics = ingest_from_dir(subdir, recursive=recursive, dry_run=dry, logger=jc.logger)
+        for k, v in metrics.items():
+            jc.set_metric(k, v)
+        run_url = reverse("admin:ops_jobrun_change", args=[jc.run.pk])
+
+    msg = (
+        f"Ingestion terminée: created={metrics['created']} "
+        f"duplicates={metrics['duplicates']} scanned={metrics['scanned']}. "
+        f"<a href='{run_url}'>Voir le JobRun</a>"
+    )
+    messages.success(request, mark_safe(msg))
+    return redirect("receipts_management")

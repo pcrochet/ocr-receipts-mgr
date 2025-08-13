@@ -1,0 +1,18 @@
+{# backend/templates/admin/index.html #}
+{% extends "admin/index.html" %}
+
+{% block content %}
+  {{ block.super }}
+
+  <div class="app-quicklinks" style="margin-top: 1.25rem;">
+    <h2>Outils</h2>
+
+    {# Tente la reverse sans crasher ; sinon fallback en dur #}
+    {% url 'receipts_management' as rm_url %}
+    {% if rm_url %}
+      <p><a class="button default" href="{{ rm_url }}">Receipts Management</a></p>
+    {% else %}
+      <p><a class="button default" href="/admin/receipts-management/">Receipts Management</a></p>
+    {% endif %}
+  </div>
+{% endblock %}

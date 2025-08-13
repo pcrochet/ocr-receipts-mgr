@@ -1,18 +1,9 @@
 # ops/management/commands/ingest_from_dir.py
 
 from __future__ import annotations
-from pathlib import Path
-
 from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone
-from django.conf import settings
-
-from ocr.models import Receipt
-from ocr.services import storage as ocr_storage
-from ocr.services.receipts import finalize_collected_move
 from ops.services.jobrun import job_context
-
-SUPPORTED_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".pdf"}
+from ocr.services.ingest import ingest_from_dir
 
 class Command(BaseCommand):
     help = "Ingestion initiale: scanne VAR_DIR/<subdir> et crée des Receipt en état 'collected'."
@@ -26,79 +17,15 @@ class Command(BaseCommand):
         subdir = (opts["subdir"] or "incoming").strip().lstrip("/\\") or "incoming"
         dry = bool(opts["dry_run"])
         recursive = not bool(opts["no_recursive"])
-        now = timezone.now()
 
         with job_context("ingest_from_dir", params={"subdir": subdir, "dry_run": dry, "recursive": recursive}) as jc:
-            logger = jc.logger
-            var_dir = Path(getattr(settings, "VAR_DIR", Path(settings.BASE_DIR) / "var")).resolve()
-            base = (var_dir / subdir).resolve()
-            if not base.exists() or not base.is_dir():
-                raise CommandError(f"Sous-dossier introuvable: {base}")
+            try:
+                metrics = ingest_from_dir(subdir, recursive=recursive, dry_run=dry, logger=jc.logger)
+            except Exception as e:
+                raise CommandError(str(e)) from e
 
-            created = 0
-            duplicates = 0
-            scanned = 0
+            for k, v in metrics.items():
+                jc.set_metric(k, v)
 
-            files = []
-            if recursive:
-                for p in base.rglob("*"):
-                    if p.is_file() and p.suffix.lower() in SUPPORTED_EXT:
-                        files.append(p)
-            else:
-                files = [p for p in base.iterdir() if p.is_file() and p.suffix.lower() in SUPPORTED_EXT]
-
-            logger.info("Scanning dir=%s  files=%d", base, len(files))
-
-            for abs_path in files:
-                scanned += 1
-                rel_posix = abs_path.relative_to(var_dir).as_posix()
-                rel_parent = "/".join(rel_posix.split("/")[:-1]) or subdir
-                filename = abs_path.name
-
-                try:
-                    content_hash = ocr_storage.compute_sha256(abs_path)
-                except Exception as e:
-                    logger.warning("Skip unreadable file=%s err=%s", abs_path, e)
-                    continue
-
-                if Receipt.objects.filter(content_hash=content_hash).exists():
-                    duplicates += 1
-                    continue
-
-                if dry:
-                    created += 1
-                    logger.info("[dry-run] would create receipt: %s", rel_posix)
-                    continue
-
-                r = Receipt.objects.create(
-                    state=Receipt.State.COLLECTED,
-                    content_hash=content_hash,
-                    source_path=rel_parent,
-                    original_filename=filename,
-                )
-
-                try:
-                    size, mime = ocr_storage.stat_file(abs_path)
-                    r.size_bytes = size
-                    if mime:
-                        r.mime_type = mime
-                    r.save(update_fields=["size_bytes", "mime_type"])
-                except Exception:
-                    pass
-
-                # déplace en receipts_raw/YYYY-MM-DD + maj source_path
-                finalize_collected_move(r.pk, move_date=now.date())
-                created += 1
-
-                if created % 50 == 0:
-                    logger.info("Progress: created=%d duplicates=%d scanned=%d", created, duplicates, scanned)
-
-            jc.set_metric("created", created)
-            jc.set_metric("duplicates", duplicates)
-            jc.set_metric("scanned", scanned)
-            logger.info("Done: created=%d duplicates=%d scanned=%d", created, duplicates, scanned)
-
-            if dry:
-                self.stdout.write(self.style.WARNING(f"[dry-run] created={created} duplicates={duplicates} scanned={scanned}"))
-            else:
-                self.stdout.write(self.style.SUCCESS(f"created={created} duplicates={duplicates} scanned={scanned}"))
+            msg = f"created={metrics['created']} duplicates={metrics['duplicates']} scanned={metrics['scanned']}"
+            self.stdout.write(self.style.SUCCESS(msg))

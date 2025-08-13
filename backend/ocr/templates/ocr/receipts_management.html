@@ -1,0 +1,47 @@
+{# backend/ocr/templates/ocr/receipts_management.html #}
+
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Receipts Management</h1>
+
+<div class="module">
+  <h2>Ingestion depuis un dossier</h2>
+  <form method="post" action="{% url 'ocr_run_ingest_from_dir' %}">
+    {% csrf_token %}
+    <label>Sous-dossier (VAR_DIR/…):
+      <input type="text" name="subdir" value="incoming" />
+    </label>
+    <label>
+      <input type="checkbox" name="recursive" checked /> Récursif
+    </label>
+    <label>
+      <input type="checkbox" name="dry_run" /> Dry-run
+    </label>
+    <button type="submit" class="button default">Lancer l’ingestion</button>
+  </form>
+</div>
+
+<div class="module" style="margin-top:1rem;">
+  <h2>Statuts des tickets</h2>
+  <table class="adminlist">
+    <thead><tr><th>État</th><th>Compteur</th><th>Accès</th></tr></thead>
+    <tbody>
+      {% for row in data %}
+      <tr>
+        <td>{{ row.label }}</td>
+        <td>{{ row.count }}</td>
+        <td>
+          <a href="{% url 'admin:ocr_receipt_changelist' %}?state__exact={{ row.key }}">
+            Voir
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3"><em>Aucun ticket</em></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
