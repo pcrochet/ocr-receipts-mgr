@@ -22,6 +22,8 @@ VAR_SUBDIRS = {
     "exports": VAR_DIR / "exports",
     # optionnel : JSON intermédiaire
     "receipts_json": VAR_DIR / "receipts_json",
+    "credentials_gmail": VAR_DIR / "credentials" / "gmail",
+    "locks": VAR_DIR / "locks",
 }
 
 # Compat rétro avec tes constantes existantes
@@ -186,4 +188,38 @@ LOGGING = {
             "propagate": False,
         },
     },
+}
+
+# === OPS / Collecte Gmail =====================================================
+def _split_csv(env_name: str, default: str = "") -> list[str]:
+    raw = os.getenv(env_name, default)
+    return [x.strip() for x in raw.split(",") if x.strip()]
+
+OPS_GMAIL_COLLECT = {
+    # Activation globale (peut rester False en dev tant que les secrets ne sont pas posés)
+    "ENABLED": os.getenv("OPS_GMAIL_ENABLED", "false").lower() in {"1", "true", "yes"},
+    # Scopes minimaux
+    "SCOPES": _split_csv(
+        "OPS_GMAIL_SCOPES",
+        "https://www.googleapis.com/auth/gmail.readonly"
+    ),
+    # Requête Gmail par défaut
+    "QUERY": os.getenv("OPS_GMAIL_QUERY", "is:unread has:attachment"),
+    # Filtres/limites
+    "ALLOWED_SENDERS": _split_csv("OPS_GMAIL_ALLOWED_SENDERS", ""),
+    "ALLOWED_MIME_TYPES": _split_csv("OPS_GMAIL_ALLOWED_MIME_TYPES", "image/jpeg,image/png,application/pdf"),
+    "MAX_SIZE_BYTES": int(os.getenv("OPS_GMAIL_MAX_SIZE_BYTES", str(20 * 1024 * 1024))),  # 20 MB
+    "MAX_ATTACH_PER_RUN": int(os.getenv("OPS_GMAIL_MAX_ATTACH_PER_RUN", "100")),
+    # Post-traitement Gmail (optionnel si scope modify)
+    "APPLY_LABELS": os.getenv("OPS_GMAIL_APPLY_LABELS", "false").lower() in {"1", "true", "yes"},
+    "LABEL_IMPORTED": os.getenv("OPS_GMAIL_LABEL_IMPORTED", "pobs/imported"),
+    "LABEL_QUARANTINE": os.getenv("OPS_GMAIL_LABEL_QUARANTINE", "pobs/quarantine"),
+    "MARK_AS_READ": os.getenv("OPS_GMAIL_MARK_AS_READ", "false").lower() in {"1", "true", "yes"},
+    # Exécution
+    "DRY_RUN": os.getenv("OPS_GMAIL_DRY_RUN", "true").lower() in {"1", "true", "yes"},
+    # Dossiers
+    "CREDENTIALS_DIR": VAR_SUBDIRS["credentials_gmail"],
+    "STORAGE_INCOMING_DIR": VAR_SUBDIRS["incoming"],
+    "STORAGE_QUARANTINE_DIR": VAR_SUBDIRS["quarantine"],
+    "LOG_JSONL_DIR": VAR_SUBDIRS["logs"],
 }
