@@ -1,0 +1,235 @@
+v2
+==================================================================
+
+1) Préparer la config & les modèles
+
+1.1 Configuration (settings / Sitecfg)
+Bloc OPS_GMAIL_COLLECT (env-overridable) :
+ENABLED: bool
+SCOPES: list[str] (ex. ["https://www.googleapis.com/auth/gmail.readonly"] + option gmail.modify si on applique labels/mark-as-read)
+QUERY: str (par défaut is:unread has:attachment)
+ALLOWED_SENDERS: list[str]
+ALLOWED_MIME_TYPES: list[str] (ex. ["image/jpeg","image/png","application/pdf"])
+MAX_SIZE_BYTES: int (garde-fou)
+MAX_ATTACH_PER_RUN: int
+APPLY_LABELS: bool, LABEL_IMPORTED: str, LABEL_QUARANTINE: str, MARK_AS_READ: bool
+DRY_RUN: bool
+CREDENTIALS_DIR: Path → BASE_DIR/var/credentials/gmail/
+STORAGE_INCOMING_DIR: Path → BASE_DIR/var/incoming
+STORAGE_QUARANTINE_DIR: Path → BASE_DIR/var/quarantine
+
+1.2 Dossiers de travail
+Respecter ton format : incoming/YYYY-MM-DD/ (idem pour quarantine/YYYY-MM-DD/).
+
+1.3 Modèles (ajouts minimaux)
+Dans Receipt (si non existants) :
+provenance & Gmail : source="gmail", gmail_message_id, gmail_attachment_id
+fichier : original_filename, content_type, filesize, sha256, storage_path (chemin relatif depuis var/…)
+email : sender, subject, received_at (timestamp Gmail)
+Index/contraintes : unique (source, gmail_attachment_id), index sur sha256.
+
+1.4 Checks
+checks.py : existence des dossiers (incoming, quarantine, logs, credentials/gmail), présence de client_secret.json/token.json si ENABLED, cohérence des paramètres (types MIME non vide, tailles >0, etc.).
+
+2) Implémenter le service générique service/gmail.py
+
+But : une seule fonction de haut niveau appelée à la fois par la management command et par la vue admin.
+API proposée
+collect_from_gmail(*, dry_run: bool | None = None, max_items: int | None = None, since: date | None = None) -> CollectSummary
+Lit la config, gère le lock (fichier var/locks/collect_from_gmail.lock), ouvre/ferme un JobRun, retourne un objet CollectSummary (totaux, chemins log, id JobRun).
+Étapes internes :
+Auth Gmail (client/refresh token) depuis CREDENTIALS_DIR
+Query messages (avec QUERY + since si renseigné)
+Pour chaque message : parse MIME, lister PJ
+Filtrer par sender/MIME/size
+Dédup (gmail_attachment_id et sha256)
+Écrire vers incoming/YYYY-MM-DD/ (ou quarantine/YYYY-MM-DD/ si non conforme)
+Créer Receipt (state=ingested) + métadatas
+Si APPLY_LABELS : label « imported » (ou « quarantine ») et MARK_AS_READ si activé
+Renseigner métriques (emails_scanned, attachments_seen, downloaded, created, duplicates_skipped, quarantined, errors_count, duration_sec, gmail_api_calls)
+Logs en JSONL : var/logs/ops/collect_from_gmail-YYYY-MM-DD.jsonl
+(La vue et la command ne feront qu’appeler cette fonction et afficher le résumé.)
+
+3) Mise à jour du template receipts_management.html
+
+Ajouter une carte “Collecte Gmail” :
+Afficher info du dernier JobRun (date, durée, stats clés) — si les champs n’existent pas encore, afficher “—” proprement (fallback).
+Formulaire minimal : dry-run (switch), max items (input), bouton Lancer.
+Bouton désactivé si un run est en cours (via flag lock/DB).
+Le reste du dashboard reste inchangé (compteurs d’états, etc.).
+La vue admin qui rend ce template :
+Charge le dernier JobRun du job collect_from_gmail si dispo (sinon placeholders).
+Sur POST, appelle collect_from_gmail(...), puis recharge la page avec le résumé.
+
+4) Première exécution via management command
+
+Créer manage.py collect_from_gmail avec options --dry-run, --max, --since.
+Elle n’implémente pas la logique : elle appelle service/gmail.collect_from_gmail().
+Elle écrit dans JobRun (déjà fait par le service), et affiche un résumé clair.
+
+5) Exécution depuis le template admin
+
+Réutilise strictement le même service (pas de duplication).
+Le résultat est affiché en haut de page (flash message/zone de résumé) + lien vers le fichier de log du jour.
+
+6) Générer de nouveaux secrets Gmail
+
+Résumé rapide (je te guiderai pas-à-pas quand on y est) :
+Aller sur Google Cloud Console → créer un projet (ou réutiliser).
+Activer l’API Gmail.
+OAuth consent screen : type “External”, remplir les infos minimales, ajouter l’utilisateur test (ton compte Gmail).
+Credentials → Create Credentials → OAuth client ID → type “Desktop app”.
+Télécharger le client_secret.json (ou client_secret_XXXXX.json) et le placer dans BASE_DIR/var/credentials/gmail/.
+Premier run interactif (dev) : le flow OAuth créera token.json dans le même dossier.
+En prod, soit on copie token.json, soit on rejoue le flow via un tunnel/CLI.
+
+7) Tests & sécurité
+
+Dry-run obligatoire pour le premier test.
+Whitelist d’expéditeurs pour éviter l’ingestion “bruit”.
+Idempotence testée (relancer deux fois ne crée pas de doublons).
+Concurrence : lock activé.
+
+v1
+==================================================================
+
+1) Pré-requis & décisions de design
+-----------------------------------------------------------------
+
+1.1 OAuth Gmail & secrets
+
+Nous utiliserons OAuth client (Desktop/Installed app) plutôt que service account (non adapté aux comptes perso Gmail).
+Scopes minimaux : gmail.readonly (lecture), et optionnel gmail.modify si on veut appliquer un label/mark-as-read après import.
+Stockage des secrets/tokens sous BASE_DIR/var/credentials/gmail/ :
+client_secret.json (fourni par Google Cloud)
+token.json (généré après 1er consentement)
+Variables d’env via settings.py (ou .env) : activation du job, ID client, scopes, labels cibles, taille max, types MIME autorisés, etc.
+
+1.2 Idempotence & déduplication
+
+Clés candidates à stocker côté Receipt :
+gmail_message_id, gmail_attachment_id, sha256 du fichier, original_filename.
+Règle : si un attachement a déjà été importé (même gmail_attachment_id ou même sha256), on skip.
+Gmail : on applique un label « pobs/imported » après traitement (si scope modify) pour éviter toute relecture.
+
+1.3 Emplacement des fichiers
+
+Les pièces jointes validées vont dans BASE_DIR/var/incoming/YYYY/MM/DD/ (uniformisé).
+Les pièces non conformes (type/MIME, taille, corruption) → BASE_DIR/var/quarantine/YYYY/MM/DD/.
+
+1.4 États & enchaînement
+
+Création du Receipt avec state="ingested".
+On n’enchaîne pas automatiquement vers compute_ocr (on garde la main via le template receipts_management). On pourra prévoir une case à cocher « lancer OCR après import » plus tard.
+
+1.5 Observabilité & métriques
+
+Dans JobRun pour ce job :
+emails_scanned, attachments_seen, attachments_downloaded, receipts_created, duplicates_skipped, quarantined, errors_count, duration_sec, gmail_api_calls.
+Fichier log JSONL sous BASE_DIR/var/logs/ops/collect_from_gmail-YYYY-MM-DD.jsonl (1 ligne / événement clé).
+
+1.6 Verrous / Concurrence
+
+Empêcher l’exécution concurrente :
+Soit lock file BASE_DIR/var/locks/collect_from_gmail.lock,
+Soit un flag côté DB (JobRun en running) avec contrôle au lancement.
+Le bouton Admin sera désactivé si un run est en cours.
+
+1.7 Paramétrage souple
+
+Query Gmail configurable (ex. par défaut : is:unread has:attachment + filtres sur expéditeurs autorisés).
+Liste d’expéditeurs autorisés (whitelist), types MIME autorisés (image/jpeg, image/png, application/pdf, …), taille max (ex. 20 MB), max items per run (garde-fou).
+Mode dry-run (compte et logue sans écrire) pour validation.
+
+2) Évolutions de modèle (minimes mais utiles)
+-----------------------------------------------------------------
+
+Sans changer ta structure, on propose d’ajouter (si non présents) aux Receipts :
+source (valeur ‘gmail’)
+gmail_message_id, gmail_attachment_id
+original_filename, content_type, filesize
+sha256
+sender, subject, received_at (date Gmail)
+storage_path (chemin relatif depuis BASE_DIR/var/…)
+Index/contrainte : unique sur (source, gmail_attachment_id) et index sur sha256.
+(On vérifiera ce qui existe déjà avant toute migration.)
+
+3) Configuration applicative
+-----------------------------------------------------------------
+
+settings.py (ou Sitecfg si tu préfères le DB-driven) : bloc OPS_GMAIL_COLLECT avec :
+ENABLED, SCOPES, QUERY, ALLOWED_SENDERS, ALLOWED_MIME_TYPES, MAX_SIZE_BYTES, MAX_ATTACH_PER_RUN, LABEL_IMPORTED, LABEL_QUARANTINE, APPLY_LABELS, MARK_AS_READ, DRY_RUN.
+checks.py : vérifie présence des dossiers (incoming, quarantine, logs, credentials), des fichiers secrets, et la cohérence des paramètres (ex : ALLOWED_MIME_TYPES non vide).
+
+4) Client Gmail & parsing
+-----------------------------------------------------------------
+
+Petite couche utilitaire « gmail_client.py » (dans ops ou backend/common) pour :
+Auth, refresh token, scopes, gestion rate limits (exponential backoff).
+Listing des messages selon QUERY, paginées.
+Récupération robuste des attachements : parcours de l’arbre MIME (certains fichiers sont imbriqués).
+Décodage Base64URL → bytes, extraction meta (filename, mimeType, sizeEstimate).
+(Optionnel) application de labels / mark-as-read.
+
+5) Logique du job collect_from_gmail
+-----------------------------------------------------------------
+
+Boucle messages → pièces jointes :
+Filtre expéditeur / MIME / taille.
+Calcul sha256 en mémoire (ou après écriture temporaire si trop gros).
+Déduplication (requête DB + cache local du run).
+Écriture fichier dans incoming/YYYY/MM/DD/.
+Création Receipt (state = ingested) + métadatas.
+Label Gmail « imported » + mark-as-read (si activé).
+En cas d’échec de validation → quarantine + label « quarantine » (si activé).
+Métriques & logs remplis au fil de l’eau, puis sauvegarde/close du JobRun.
+
+6) Commande de management
+-----------------------------------------------------------------
+
+python manage.py collect_from_gmail [--dry-run] [--max N] [--since YYYY-MM-DD]
+Gère le lock, écrit le JobRun, renvoie un résumé clair en fin d’exécution (stdout + JobRun).
+
+7) Intégration Admin & Template receipts_management.html
+-----------------------------------------------------------------
+
+7.1 Vue d’administration (admin view)
+
+Ajout d’une action protégée (staff/superuser) qui :
+Affiche l’état du dernier run (JobRun le plus récent pour ce job).
+Propose un bouton “Lancer collecte Gmail” (+ options rapides : dry-run, max items).
+Déclenche la commande de management côté serveur (via call_command) et affiche le résultat (summary + lien logs).
+Désactive le bouton si run en cours.
+
+7.2 Dashboard / KPIs
+
+Dans receipts_management.html, nouvelle carte « Collecte Gmail » :
+Dernier run : date, durée, stats (vus, téléchargés, créés, duplicates, quarantine, erreurs).
+Bouton lancer, switch dry-run, input max items.
+Option : afficher le compteur de non-lus avec PJ estimé (en lisant rapidement Gmail lors de l’affichage si souhaité).
+
+8) Tests & validation
+-----------------------------------------------------------------
+
+Tests unitaires :
+Parsing MIME (cas imbriqués), filtre MIME/taille, hash, déduplication, label logic (mock).
+Tests d’intégration :
+Dry-run → aucun fichier écrit / aucun Receipt créé.
+Run réel sur un petit échantillon (ex. 3 messages, 5 attachements).
+Scénarios edge :
+Fichiers corrompus / 0 bytes, noms de fichiers dupliqués, pièces jointes géantes, messages avec liens Drive (non PJ), PJ inline vs attachment.
+
+9) Documentation & checks
+-----------------------------------------------------------------
+
+Section README interne “Ops/collect_from_gmail” : scopes, setup Google Cloud, 1er consentement, où placer client_secret.json, comment révoquer, comment relancer.
+checks.py : règles de cohérence (dossiers, secrets, droits en écriture, labels configurés si APPLY_LABELS=True).
+
+10) Déploiement & exploitation
+-----------------------------------------------------------------
+
+Dev : 1er run interactif pour générer token.json.
+Prod : copier client_secret.json + token.json (ou refaire le consentement via un tunnel/CLI), mettre les variables d’env, tester en dry-run, puis activer.
+Planification : on reste sur management command (cron ou django_celery_beat plus tard).
+(On garde la simplicité pour l’instant.)
+
