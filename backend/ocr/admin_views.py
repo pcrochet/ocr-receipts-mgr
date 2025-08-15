@@ -12,6 +12,11 @@ from .models import Receipt
 from .services.ingest import ingest_from_dir
 from ops.services.jobrun import job_context
 
+from pathlib import Path
+from ocr.services.gmail import collect_from_gmail
+from ops.models import JobRun
+
+
 
 def receipts_management(request):
     # Compter fichiers incoming (non récursif)
@@ -61,3 +66,29 @@ def run_ingest_from_dir(request):
     )
     messages.success(request, mark_safe(msg))
     return redirect("receipts_management")
+
+
+def collect_from_gmail_view(request):
+    if request.method != "POST":
+        return redirect(reverse("receipts_management"))
+
+    dry_run = bool(request.POST.get("dry_run"))
+    max_items_raw = request.POST.get("max_items")
+    max_items = int(max_items_raw) if (max_items_raw and max_items_raw.isdigit()) else None
+
+    summary = collect_from_gmail(dry_run=dry_run, max_items=max_items)
+
+    level = messages.INFO if summary.status == "success" else messages.ERROR
+    messages.add_message(
+        request,
+        level,
+        (
+            f"Collecte Gmail — status={summary.status} | "
+            f"created={summary.metrics.get('receipts_created')} | "
+            f"downloaded={summary.metrics.get('attachments_downloaded')} | "
+            f"duplicates={summary.metrics.get('duplicates_skipped')} | "
+            f"errors={summary.metrics.get('errors_count')} | "
+            f"log: {summary.log_path}"
+        ),
+    )
+    return redirect(reverse("receipts_management"))

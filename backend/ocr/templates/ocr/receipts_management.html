@@ -30,6 +30,49 @@
 </div>
 
 <div class="module" style="margin-top:1rem;">
+  <h2>Ingestion depuis Gmail</h2>
+
+  <div>
+    <p><strong>Dernier run :</strong>
+      {% if gmail_last_run %}
+        {{ gmail_last_run.started_at }} — statut: {{ gmail_last_run.status }}
+        {% if gmail_last_run.duration_ms %} ({{ gmail_last_run.duration_ms }} ms){% endif %}
+      {% else %}
+        —
+      {% endif %}
+    </p>
+    {% if gmail_last_run and gmail_last_run.metrics %}
+      <ul>
+        <li>Emails scannés : {{ gmail_last_run.metrics.emails_scanned|default:"—" }}</li>
+        <li>PJ vues : {{ gmail_last_run.metrics.attachments_seen|default:"—" }}</li>
+        <li>Téléchargées : {{ gmail_last_run.metrics.attachments_downloaded|default:"—" }}</li>
+        <li>Receipts créés : {{ gmail_last_run.metrics.receipts_created|default:"—" }}</li>
+        <li>Doublons ignorés : {{ gmail_last_run.metrics.duplicates_skipped|default:"—" }}</li>
+        <li>Quarantine : {{ gmail_last_run.metrics.quarantined|default:"—" }}</li>
+        <li>Erreurs : {{ gmail_last_run.metrics.errors_count|default:"—" }}</li>
+      </ul>
+      {% if gmail_last_run.log_path %}
+        <p>Log : {{ gmail_last_run.log_path }}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <form method="post" action="{% url 'ocr_run_collect_from_gmail' %}">
+    {% csrf_token %}
+    <label>
+      <input type="checkbox" name="dry_run" {% if gmail_default_dry_run %}checked{% endif %}/> Dry-run
+    </label>
+    <label>Max items :
+      <input type="number" name="max_items" min="1" value="{{ gmail_default_max|default:50 }}" />
+    </label>
+    <button type="submit" class="button default"
+            {% if gmail_lock_active %}disabled title="Un run est en cours…"{% endif %}>
+      Lancer la collecte Gmail
+    </button>
+  </form>
+</div>
+
+<div class="module" style="margin-top:1rem;">
   <h2>Ingestion depuis un dossier</h2>
   <form method="post" action="{% url 'ocr_run_ingest_from_dir' %}">
     {% csrf_token %}
