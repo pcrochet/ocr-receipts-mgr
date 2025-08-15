@@ -69,6 +69,14 @@ class Receipt(models.Model):
     mime_type = models.CharField(max_length=100, blank=True)
     size_bytes = models.BigIntegerField(null=True, blank=True, validators=[MinValueValidator(0)])
 
+    # Provenance / Gmail
+    source = models.CharField(max_length=32, default="gmail", db_index=True)  # "gmail", "dir", ...
+    gmail_message_id = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+    gmail_attachment_id = models.CharField(max_length=128, null=True, blank=True)
+    sender = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=512, blank=True)
+    received_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
     # Métier
     purchase_date = models.DateField(null=True, blank=True, db_index=True)
     currency = models.CharField(max_length=3, default="EUR")
@@ -93,11 +101,19 @@ class Receipt(models.Model):
                 check=Q(total_amount__gte=0) | Q(total_amount__isnull=True),
                 name="ck_receipt_total_ge0",
             ),
+            # Unicité logique d'une PJ Gmail (quand présente)
+            models.UniqueConstraint(
+                fields=["source", "gmail_attachment_id"],
+                name="uq_receipt_src_attach",
+                condition=Q(gmail_attachment_id__isnull=False),
+            ),
         ]
         indexes = [
             models.Index(fields=["state"], name="ix_receipt_state"),
             models.Index(fields=["purchase_date"], name="ix_receipt_pdate"),
             models.Index(fields=["brand_id"], name="ix_receipt_brand"),
+            models.Index(fields=["source"], name="ix_receipt_source"),
+            models.Index(fields=["gmail_message_id"], name="ix_receipt_gmail_msg"),
         ]
 
     def __str__(self) -> str:
