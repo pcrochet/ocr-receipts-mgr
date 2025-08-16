@@ -19,7 +19,7 @@ class ReceiptAdminForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         state = cleaned.get("state")
-        if state == Receipt.State.COLLECTED:
+        if state == Receipt.State.INGESTED:
             errors = {}
             if not (cleaned.get("source_path") or "").strip():
                 errors["source_path"] = "Requis en état 'collected'."
@@ -48,7 +48,7 @@ class ReceiptAdmin(admin.ModelAdmin):
     readonly_fields = ("content_hash", "created_at", "updated_at")
 
     def get_changeform_initial_data(self, request):
-        return {"state": Receipt.State.COLLECTED, "source_path": "incoming"}
+        return {"state": Receipt.State.INGESTED, "source_path": "incoming"}
 
     def get_fields(self, request, obj=None):
         minimal = ["state", "source_path", "original_filename", "content_hash", "created_at", "updated_at"]
@@ -71,7 +71,7 @@ class ReceiptAdmin(admin.ModelAdmin):
             "created_at",
             "updated_at",
         ]
-        if obj is None or obj.state == Receipt.State.COLLECTED:
+        if obj is None or obj.state == Receipt.State.INGESTED:
             return minimal
         return full
 
@@ -93,13 +93,13 @@ class ReceiptAdmin(admin.ModelAdmin):
             "created_at",
             "updated_at",
         ]
-        if obj is None or (obj and obj.state == Receipt.State.COLLECTED):
+        if obj is None or (obj and obj.state == Receipt.State.INGESTED):
             return list(set(base_ro + ro_if_collected))
         return base_ro
 
     def save_model(self, request, obj: Receipt, form, change):
         # prépare hash/size/mime si collected
-        if obj.state == Receipt.State.COLLECTED:
+        if obj.state == Receipt.State.INGESTED:
             prepare_collected(obj)
 
         old_state = None
@@ -117,6 +117,6 @@ class ReceiptAdmin(admin.ModelAdmin):
             write_admin_log("Receipt state changed", receipt=obj, extra={"from": old_state, "to": obj.state})
 
         # Déplacement vers receipts_raw/YYYY-MM-DD après COMMIT
-        if obj.state == Receipt.State.COLLECTED:
+        if obj.state == Receipt.State.INGESTED:
             move_date = (obj.created_at.date() if obj.created_at else timezone.now().date())
             transaction.on_commit(lambda: finalize_collected_move(obj.pk, move_date))

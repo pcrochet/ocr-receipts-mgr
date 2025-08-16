@@ -8,7 +8,6 @@ REQUIRED_APPS = {"sitecfg", "ocr", "ops"}
 REQUIRED_VAR_SUBDIRS = ["incoming", "quarantine", "receipts_raw", "logs", "exports"]
 OPTIONAL_VAR_SUBDIRS = ["credentials/gmail", "locks"]
 
-
 @register()
 def project_conventions_check(app_configs, **kwargs):
     errors = []
@@ -96,5 +95,17 @@ def project_conventions_check(app_configs, **kwargs):
             warnings.append(Warning("ALLOWED_MIME_TYPES est vide pour Gmail.", id="CFG.W012"))
         if gmail_cfg.get("MAX_SIZE_BYTES", 0) <= 0:
             warnings.append(Warning("MAX_SIZE_BYTES devrait être > 0 pour Gmail.", id="CFG.W013"))
+        if gmail_cfg.get("MIN_IMAGE_INLINE_BYTES", 0) < 0:
+            warnings.append(Warning("MIN_IMAGE_INLINE_BYTES ne doit pas être négatif.", id="CFG.W014"))
+
+        # Labels : si on veut appliquer/retirer des labels, il faut le scope gmail.modify
+        scopes = set(gmail_cfg.get("SCOPES", []))
+        if gmail_cfg.get("APPLY_LABELS") or gmail_cfg.get("MARK_AS_READ"):
+            if not any("gmail.modify" in s for s in scopes):
+                warnings.append(Warning(
+                    "APPLY_LABELS/MARK_AS_READ activé(s) mais le scope 'https://www.googleapis.com/auth/gmail.modify' est absent.",
+                    id="CFG.W015",
+                    hint="Ajoute le scope gmail.modify dans OPS_GMAIL_SCOPES ou désactive APPLY_LABELS/MARK_AS_READ.",
+                ))
 
     return errors + warnings

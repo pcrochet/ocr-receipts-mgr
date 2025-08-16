@@ -201,14 +201,18 @@ OPS_GMAIL_COLLECT = {
     # Scopes minimaux
     "SCOPES": _split_csv(
         "OPS_GMAIL_SCOPES",
-        "https://www.googleapis.com/auth/gmail.readonly"
+        "https://www.googleapis.com/auth/gmail.modify"
     ),
     # Requête Gmail par défaut
-    "QUERY": os.getenv("OPS_GMAIL_QUERY", "is:unread has:attachment"),
+    "QUERY": os.getenv("OPS_GMAIL_QUERY", "is:unread has:attachment in:inbox newer_than:30d"),
     # Filtres/limites
     "ALLOWED_SENDERS": _split_csv("OPS_GMAIL_ALLOWED_SENDERS", ""),
+    # Filtres/limites — on n'utilise plus la whitelist, mais une blacklist d'expéditeurs
+    "BLACKLIST_SENDERS": _split_csv("OPS_GMAIL_BLACKLIST_SENDERS", ""),
     "ALLOWED_MIME_TYPES": _split_csv("OPS_GMAIL_ALLOWED_MIME_TYPES", "image/jpeg,image/png,application/pdf"),
-    "MAX_SIZE_BYTES": int(os.getenv("OPS_GMAIL_MAX_SIZE_BYTES", str(20 * 1024 * 1024))),  # 20 MB
+    # Max 5 Mo et seuil "inline" (images < 20 Ko ignorées)
+    "MAX_SIZE_BYTES": int(os.getenv("OPS_GMAIL_MAX_SIZE_BYTES", str(5 * 1024 * 1024))),   # 5 MB
+    "MIN_IMAGE_INLINE_BYTES": int(os.getenv("OPS_GMAIL_MIN_IMAGE_INLINE_BYTES", str(20 * 1024))),  # 20 KB
     "MAX_ATTACH_PER_RUN": int(os.getenv("OPS_GMAIL_MAX_ATTACH_PER_RUN", "100")),
     # Post-traitement Gmail (optionnel si scope modify)
     "APPLY_LABELS": os.getenv("OPS_GMAIL_APPLY_LABELS", "false").lower() in {"1", "true", "yes"},
@@ -222,4 +226,8 @@ OPS_GMAIL_COLLECT = {
     "STORAGE_INCOMING_DIR": VAR_SUBDIRS["incoming"],
     "STORAGE_QUARANTINE_DIR": VAR_SUBDIRS["quarantine"],
     "LOG_JSONL_DIR": VAR_SUBDIRS["logs"],
+    # Logging
+    "LOG_FORMAT": os.getenv("OPS_GMAIL_LOG_FORMAT", "text"),  # "text" | "jsonl"
+    "JSONL_ENABLED": os.getenv("OPS_GMAIL_JSONL_ENABLED", "false").lower() in {"1","true","yes"},
+    "VERBOSE": os.getenv("OPS_GMAIL_VERBOSE", "true" if DEBUG else "false").lower() in {"1", "true", "yes"},
 }

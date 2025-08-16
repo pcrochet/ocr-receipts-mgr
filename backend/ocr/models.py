@@ -71,8 +71,8 @@ class Receipt(models.Model):
 
     # Provenance / Gmail
     source = models.CharField(max_length=32, default="gmail", db_index=True)  # "gmail", "dir", ...
-    gmail_message_id = models.CharField(max_length=128, null=True, blank=True, db_index=True)
-    gmail_attachment_id = models.CharField(max_length=128, null=True, blank=True)
+    gmail_message_id = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    gmail_attachment_id = models.CharField(max_length=1024, null=True, blank=True)
     sender = models.CharField(max_length=255, blank=True)
     subject = models.CharField(max_length=512, blank=True)
     received_at = models.DateTimeField(null=True, blank=True, db_index=True)
